@@ -30,6 +30,6 @@ tasks:
   "RSSHub New Routes":
     name: RSSHub New Routes
     feed_url: https://rsshub.app/rsshub/routes
-    cron: '*/30 * * * *' # For more supported expression, please refer https://pkg.go.dev/github.com/robfig/cron
+    cron: '*/30 * * * *' # For more supported expressions, please refer https://pkg.go.dev/github.com/robfig/cron
     notification_url: bark://:key@api.day.app # Shoutrrr URL for feed items. Please refer https://containrrr.dev/shoutrrr/v0.8/
 ```
