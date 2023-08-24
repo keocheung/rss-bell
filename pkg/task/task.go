@@ -62,8 +62,12 @@ func (t *taskImpl) Run() {
 			logger.Errorf("create sender for %s error: %v", t.config.NotificationURL, err)
 			return
 		}
+		title := t.config.Name
+		if title == "" {
+			title = feed.Title
+		}
 		params := types.Params(map[string]string{
-			"title": feed.Title,
+			"title": title,
 			"url":   item.Link,
 		})
 		if err := sender.Send(item.Title, &params); err != nil {

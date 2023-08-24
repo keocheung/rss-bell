@@ -77,17 +77,17 @@ func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[
 		go func(tID string, tConf config.Task) {
 			t, err := task.NewTask(tConf)
 			if err != nil {
-				logger.Errorf("NewTask %s error: %v", tConf.Name, err)
+				logger.Errorf("NewTask %s error: %v", tID, err)
 				return
 			}
 			taskMap[tID] = t
 			entryID, err := c.AddJob(tConf.Cron, t)
 			if err != nil {
-				logger.Errorf("addJob %s error: %v", tConf.Name, err)
+				logger.Errorf("addJob %s error: %v", tID, err)
 				return
 			}
 			entryMap[tID] = entryID
-			logger.Infof("added cron job: %s: %s", tID, tConf.Name)
+			logger.Infof("cron job added, ID: %s, Name: %s", tID, tConf.Name)
 			wg.Done()
 		}(tID, tConf)
 	}
@@ -117,16 +117,16 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 		}
 
 		// Add new tasks
-		logger.Infof("Add cron job: %s: %s", tID, tConf.Name)
+		logger.Infof("cron job added, ID: %s, Name: %s", tID, tConf.Name)
 		t, err := task.NewTask(tConf)
 		if err != nil {
-			logger.Errorf("NewTask %s error: %v", tConf.Name, err)
+			logger.Errorf("NewTask %s error: %v", tID, err)
 			continue
 		}
 		tasks[tID] = t
 		entryID, err := c.AddJob(tConf.Cron, t)
 		if err != nil {
-			logger.Errorf("AddJob %s error: %v", tConf.Name, err)
+			logger.Errorf("AddJob %s error: %v", tID, err)
 			continue
 		}
 		entries[tID] = entryID

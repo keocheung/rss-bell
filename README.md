@@ -11,7 +11,7 @@ services:
     container_name: rss-bell
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./config.yaml:/config/config.yaml    # YAML config file location.
+      - ./config.yaml:/config/config.yaml    # YAML config file location
     network_mode: bridge
     environments:
       - CONFIG_PATH=/config/config.yaml      # Optional. Default is /config/config.yaml
