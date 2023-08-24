@@ -13,7 +13,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./config.yaml:/config/config.yaml    # YAML config file location
     network_mode: bridge
-    environments:
+    environment:
       - CONFIG_PATH=/config/config.yaml      # Optional. Default is /config/config.yaml
       - HTTP_PROXY=http://127.0.0.1:9090     # Optional. Default is empty
       - HTTPS_PROXY=http://127.0.0.1:9090    # Optional. Default is empty
