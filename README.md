@@ -20,6 +20,14 @@ services:
       - NO_PROXY=example.com,192.168.0.0/16  # Optional. Default is empty
     restart: unless-stopped
 ```
+### Go Install
+```shell
+go install github.com/keocheung/rss-bell@latest
+```
+### Build from source
+```shell
+go build -o rss-bell .
+```
 
 ## Usage
 **RSS-Bell** uses [Shoutrrr](https://github.com/containrrr/shoutrrr) as notification library. Please refer [Shoutrrr Docs](https://containrrr.dev/shoutrrr/v0.8/) for more details.
@@ -33,3 +41,4 @@ tasks:
     cron: '*/30 * * * *' # For more supported expressions, please refer https://pkg.go.dev/github.com/robfig/cron
     notification_url: bark://:key@api.day.app # Shoutrrr URL for feed items. Please refer https://containrrr.dev/shoutrrr/v0.8/
 ```
+The config file is automatically reloaded when modified.
