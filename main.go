@@ -87,7 +87,7 @@ func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[
 				return
 			}
 			entryMap[tID] = entryID
-			logger.Infof("cron job added, ID: %s, Name: %s", tID, tConf.Name)
+			logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
 			wg.Done()
 		}(tID, tConf)
 	}
@@ -101,10 +101,10 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 	// Remove tasks that doesn't exist anymore
 	for tID := range tasks {
 		if _, ok := conf.Tasks[tID]; !ok {
-			logger.Infof("Remove cron job: %s", tID)
 			c.Remove(entries[tID])
 			delete(tasks, tID)
 			delete(entries, tID)
+			logger.Infof("task removed: %s", tID)
 		}
 	}
 
@@ -113,11 +113,12 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 		if _, ok := tasks[tID]; ok {
 			// TODO: handle cron expression changes
 			tasks[tID].UpdateConfig(tConf)
+			logger.Infof("task updated, ID: %s", tID)
 			continue
 		}
 
 		// Add new tasks
-		logger.Infof("cron job added, ID: %s, Name: %s", tID, tConf.Name)
+		logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
 		t, err := task.NewTask(tConf)
 		if err != nil {
 			logger.Errorf("NewTask %s error: %v", tID, err)
