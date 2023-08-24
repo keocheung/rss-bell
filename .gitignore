@@ -1,0 +1,6 @@
+.DS_Store
+.vscode/
+build/
+config.json
+config.yaml
+__debug_bin
