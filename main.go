@@ -20,7 +20,7 @@ import (
 
 const (
 	configPathEnvKey  = "CONFIG_PATH"
-	defaultConfigPath = "/config/config.yaml"
+	defaultConfigPath = "./config.yaml"
 )
 
 func main() {
