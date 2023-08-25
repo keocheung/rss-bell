@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 
 	"rss-bell/pkg/config"
 	"rss-bell/pkg/task"
@@ -44,28 +46,36 @@ func main() {
 		log.Fatal(err)
 	}
 	logger.Infof("watching config file: %s", configPath)
-	for {
-		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
-				return
-			}
-			if event.Has(fsnotify.Write) {
-				logger.Infof("config file changed: %s", event.Name)
-				newConf, err := loadConfigFromFile()
-				if err != nil {
-					logger.Warnf("config file watcher error: %s", err)
-					continue
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					logger.Errorf("get config file watcher events error")
+					return
 				}
-				tasks, entries = updateTasks(newConf, tasks, entries, c)
+				if event.Has(fsnotify.Create) || event.Has(fsnotify.Write) {
+					logger.Infof("config file changed: %s", event.Name)
+					newConf, err := loadConfigFromFile()
+					if err != nil {
+						logger.Warnf("config file watcher error: %s", err)
+						continue
+					}
+					tasks, entries = updateTasks(newConf, tasks, entries, c)
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					logger.Errorf("get config file watcher errors error")
+					return
+				}
+				logger.Warnf("config file watcher error: %s", err)
 			}
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
-			}
-			logger.Warnf("config file watcher error: %s", err)
 		}
-	}
+	}()
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	signal.Notify(stop, syscall.SIGTERM)
+	<-stop
 }
 
 func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[string]cron.EntryID) {

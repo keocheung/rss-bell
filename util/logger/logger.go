@@ -1,3 +1,4 @@
+// Package logger prints logs with different levels
 package logger
 
 import (
@@ -5,7 +6,7 @@ import (
 	"os"
 )
 
-type level int
+type level uint32
 
 const (
 	levelConfigEnvKey       = "LOG_LEVEL"
@@ -15,10 +16,14 @@ const (
 	levelError
 )
 
-type Logger interface {
-	Infof(format string, args ...interface{})
-	Warnf(format string, args ...interface{})
-	Errorf(format string, args ...interface{})
+var logLevel = levelInfo
+
+// init sets log level from environment
+func init() {
+	levelConfigStr := os.Getenv(levelConfigEnvKey)
+	if levelConfig, ok := levelMap[levelConfigStr]; ok {
+		logLevel = levelConfig
+	}
 }
 
 var levelMap = map[string]level{
@@ -28,6 +33,7 @@ var levelMap = map[string]level{
 	"ERROR": levelError,
 }
 
+// Debugf prints logs with DEBUG level
 func Debugf(format string, args ...interface{}) {
 	if !shouldPrint(levelDebug) {
 		return
@@ -35,6 +41,7 @@ func Debugf(format string, args ...interface{}) {
 	log.Printf("[DEBUG] "+format, args...)
 }
 
+// Infof prints logs with INFO level
 func Infof(format string, args ...interface{}) {
 	if !shouldPrint(levelInfo) {
 		return
@@ -42,6 +49,7 @@ func Infof(format string, args ...interface{}) {
 	log.Printf("[INFO] "+format, args...)
 }
 
+// Warnf prints logs with WARN level
 func Warnf(format string, args ...interface{}) {
 	if !shouldPrint(levelWarn) {
 		return
@@ -49,6 +57,7 @@ func Warnf(format string, args ...interface{}) {
 	log.Printf("[WARN] "+format, args...)
 }
 
+// Errorf prints logs with ERROR level
 func Errorf(format string, args ...interface{}) {
 	if !shouldPrint(levelError) {
 		return
@@ -57,10 +66,5 @@ func Errorf(format string, args ...interface{}) {
 }
 
 func shouldPrint(l level) bool {
-	levelConfigStr := os.Getenv(levelConfigEnvKey)
-	levelConfig, ok := levelMap[levelConfigStr]
-	if !ok {
-		return l >= levelInfo
-	}
-	return l >= levelConfig
+	return l >= logLevel
 }
