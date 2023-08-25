@@ -79,30 +79,30 @@ func main() {
 }
 
 func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[string]cron.EntryID) {
-	taskMap := make(map[string]task.Task)
-	entryMap := make(map[string]cron.EntryID)
+	tasks := make(map[string]task.Task)
+	entries := make(map[string]cron.EntryID)
 	wg := sync.WaitGroup{}
 	wg.Add(len(conf.Tasks))
 	for tID, tConf := range conf.Tasks {
 		go func(tID string, tConf config.Task) {
-			t, err := task.NewTask(tConf)
+			t, err := task.NewTask(tID, tConf)
 			if err != nil {
 				logger.Errorf("NewTask %s error: %v", tID, err)
 				return
 			}
-			taskMap[tID] = t
+			tasks[tID] = t
 			entryID, err := c.AddJob(tConf.Cron, t)
 			if err != nil {
 				logger.Errorf("addJob %s error: %v", tID, err)
 				return
 			}
-			entryMap[tID] = entryID
+			entries[tID] = entryID
 			logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
 			wg.Done()
 		}(tID, tConf)
 	}
 	wg.Wait()
-	return taskMap, entryMap
+	return tasks, entries
 }
 
 func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[string]cron.EntryID,
@@ -129,7 +129,7 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 
 		// Add new tasks
 		logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
-		t, err := task.NewTask(tConf)
+		t, err := task.NewTask(tID, tConf)
 		if err != nil {
 			logger.Errorf("NewTask %s error: %v", tID, err)
 			continue
@@ -173,16 +173,15 @@ func getConfigPath() string {
 	return configPath
 }
 
-func sendAppNotification(url, message string) error {
+func sendAppNotification(url, message string) {
 	sender, err := shoutrrr.CreateSender(url)
 	if err != nil {
-		return fmt.Errorf("create sender for %s error: %v", url, err)
+		logger.Errorf("create sender for %s error: %v", url, err)
+		return
 	}
 	params := types.Params(map[string]string{
 		"title": "RSS Bell",
 	})
-	if err := sender.Send(message, &params); err != nil {
-		return fmt.Errorf("send notification error: %v", err)
-	}
-	return nil
+	errs := sender.Send(message, &params)
+	logger.Infof("sent app notification, errs: %+v", errs)
 }

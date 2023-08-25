@@ -19,13 +19,15 @@ type Task interface {
 }
 
 type taskImpl struct {
+	id         string
 	config     config.Task
 	httpClient http.HTTPClient
 	lastGUID   string
 }
 
-func NewTask(config config.Task) (Task, error) {
+func NewTask(id string, config config.Task) (Task, error) {
 	t := &taskImpl{
+		id:         id,
 		config:     config,
 		httpClient: http.NewHTTPClient(),
 	}
@@ -42,7 +44,7 @@ func NewTask(config config.Task) (Task, error) {
 }
 
 func (t *taskImpl) Run() {
-	logger.Infof("check %s", t.config.Name)
+	logger.Infof("checking %s", t.id)
 	data, err := t.httpClient.Get(t.config.FeedURL, nil)
 	if err != nil {
 		logger.Errorf("get %s error: %v", t.config.FeedURL, err)
@@ -70,11 +72,8 @@ func (t *taskImpl) Run() {
 			"title": title,
 			"url":   item.Link,
 		})
-		if err := sender.Send(item.Title, &params); err != nil {
-			logger.Errorf("send notification for %s error: %v", t.config.NotificationURL, err)
-			return
-		}
-		logger.Infof("sent notification for %s", t.config.Name)
+		errs := sender.Send(item.Title, &params)
+		logger.Infof("sent notification for %s, errs: %+v", t.id, errs)
 	}
 	t.lastGUID = feed.Items[0].GUID
 }
