@@ -55,14 +55,19 @@ func (t *taskImpl) Run() {
 		logger.Errorf("parse %s error: %v", t.config.FeedURL, err)
 		return
 	}
+	if len(feed.Items) == 0 {
+		logger.Infof("no feed items for %s", t.id)
+		return
+	}
 	for _, item := range feed.Items {
 		if item.GUID == t.lastGUID {
+			t.lastGUID = feed.Items[0].GUID
 			return
 		}
 		sender, err := shoutrrr.CreateSender(t.config.NotificationURL)
 		if err != nil {
 			logger.Errorf("create sender for %s error: %v", t.config.NotificationURL, err)
-			return
+			continue
 		}
 		title := t.config.Name
 		if title == "" {
@@ -75,7 +80,6 @@ func (t *taskImpl) Run() {
 		errs := sender.Send(item.Title, &params)
 		logger.Infof("sent notification for %s, errs: %+v", t.id, errs)
 	}
-	t.lastGUID = feed.Items[0].GUID
 }
 
 func (t *taskImpl) UpdateConfig(config config.Task) {
