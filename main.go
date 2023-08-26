@@ -9,6 +9,7 @@ import (
 	"sync"
 	"syscall"
 
+	"rss-bell/meta"
 	"rss-bell/pkg/config"
 	"rss-bell/pkg/task"
 	"rss-bell/util/logger"
@@ -26,6 +27,7 @@ const (
 )
 
 func main() {
+	logger.Infof("rss-bell %s", meta.Version)
 	c := cron.New()
 	c.Start()
 	conf, err := loadConfigFromFile()
