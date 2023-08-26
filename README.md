@@ -1,5 +1,5 @@
 # RSS-Bell
-Send notifications when RSS feeds have new items
+Send notifications when RSS feeds have updates
 
 ## Install
 ### Docker Compose
