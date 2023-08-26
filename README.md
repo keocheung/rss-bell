@@ -7,7 +7,7 @@ Send notifications when RSS feeds have new items
 version: '3'
 services:
   rss-bell:
-    image: ghcr.io/keocheung/rss-bell
+    image: keocheung/rss-bell                # Or ghcr.io/keocheung/rss-bell
     container_name: rss-bell
     volumes:
       - /etc/localtime:/etc/localtime:ro
