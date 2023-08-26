@@ -1,3 +1,4 @@
+// Package http contains a custom interface for sending HTTP requests
 package http
 
 import (
