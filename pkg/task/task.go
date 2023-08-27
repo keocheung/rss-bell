@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"time"
 
 	"rss-bell/pkg/config"
 	"rss-bell/util/http"
@@ -19,10 +20,11 @@ type Task interface {
 }
 
 type taskImpl struct {
-	id         string
-	config     config.Task
-	httpClient http.Client
-	lastGUID   string
+	id            string
+	config        config.Task
+	httpClient    http.Client
+	lastGUID      string
+	lastPublished time.Time
 }
 
 func NewTask(id string, config config.Task) (Task, error) {
@@ -46,6 +48,7 @@ func NewTask(id string, config config.Task) (Task, error) {
 		return nil, fmt.Errorf("parse %s error: %v", t.config.FeedURL, err)
 	}
 	t.lastGUID = feed.Items[0].GUID
+	t.lastPublished = *feed.Items[0].PublishedParsed
 	return t, nil
 }
 
@@ -66,9 +69,8 @@ func (t *taskImpl) Run() {
 		return
 	}
 	for _, item := range feed.Items {
-		if item.GUID == t.lastGUID {
-			t.lastGUID = feed.Items[0].GUID
-			return
+		if t.itemIsOld(item) {
+			break
 		}
 		sender, err := shoutrrr.CreateSender(t.config.NotificationURL)
 		if err != nil {
@@ -86,8 +88,17 @@ func (t *taskImpl) Run() {
 		errs := sender.Send(item.Title, &params)
 		logger.Infof("sent notification for %s, errs: %+v", t.id, errs)
 	}
+	t.lastGUID = feed.Items[0].GUID
+	t.lastPublished = *feed.Items[0].PublishedParsed
 }
 
 func (t *taskImpl) UpdateConfig(config config.Task) {
 	t.config = config
+}
+
+func (t *taskImpl) itemIsOld(item *gofeed.Item) bool {
+	if item.PublishedParsed != nil {
+		return item.PublishedParsed.Add(-1).Before(t.lastPublished)
+	}
+	return item.GUID == t.lastGUID
 }
