@@ -26,10 +26,16 @@ type taskImpl struct {
 }
 
 func NewTask(id string, config config.Task) (Task, error) {
+	var client http.Client
+	if config.Proxy != "" {
+		client = http.NewClientWithProxy(config.Proxy)
+	} else {
+		client = http.NewClient()
+	}
 	t := &taskImpl{
 		id:         id,
 		config:     config,
-		httpClient: http.NewClient(config.Proxy),
+		httpClient: client,
 	}
 	data, err := t.httpClient.Get(t.config.FeedURL, nil)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"rss-bell/util/logger"
 )
@@ -20,7 +21,20 @@ type Client interface {
 }
 
 // NewClient creates a new HTTP client with proxy settings from the environment
-func NewClient(proxy string) Client {
+func NewClient() Client {
+	return &clientImpl{
+		client: &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+			},
+			Timeout: 60 * time.Second,
+		},
+	}
+}
+
+// NewClientWithProxy creates a new HTTP client with proxy settings.
+// If proxy is empty, no proxy will be used.
+func NewClientWithProxy(proxy string) Client {
 	var proxyFunc func(*http.Request) (*url.URL, error)
 	proxyURL, err := url.Parse(proxy)
 	if err != nil {
