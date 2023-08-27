@@ -14,9 +14,9 @@ import (
 	"rss-bell/pkg/task"
 	"rss-bell/util/logger"
 
-	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/fsnotify/fsnotify"
+	"github.com/keocheung/shoutrrr"
+	"github.com/keocheung/shoutrrr/pkg/types"
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
 )

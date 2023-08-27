@@ -3,8 +3,8 @@ module rss-bell
 go 1.20
 
 require (
-	github.com/containrrr/shoutrrr v0.8.0
 	github.com/fsnotify/fsnotify v1.6.0
+	github.com/keocheung/shoutrrr v0.0.0-20230827124427-5d7a6d9315bd
 	github.com/mmcdole/gofeed v1.2.1
 	github.com/robfig/cron/v3 v3.0.0
 	gopkg.in/yaml.v3 v3.0.1

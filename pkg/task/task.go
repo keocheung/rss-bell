@@ -7,8 +7,8 @@ import (
 	"rss-bell/util/http"
 	"rss-bell/util/logger"
 
-	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/types"
+	"github.com/keocheung/shoutrrr"
+	"github.com/keocheung/shoutrrr/pkg/types"
 	"github.com/mmcdole/gofeed"
 	"github.com/robfig/cron/v3"
 )
