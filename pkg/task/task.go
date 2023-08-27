@@ -21,7 +21,7 @@ type Task interface {
 type taskImpl struct {
 	id         string
 	config     config.Task
-	httpClient http.HTTPClient
+	httpClient http.Client
 	lastGUID   string
 }
 
@@ -29,7 +29,7 @@ func NewTask(id string, config config.Task) (Task, error) {
 	t := &taskImpl{
 		id:         id,
 		config:     config,
-		httpClient: http.NewHTTPClient(),
+		httpClient: http.NewClient(config.Proxy),
 	}
 	data, err := t.httpClient.Get(t.config.FeedURL, nil)
 	if err != nil {
