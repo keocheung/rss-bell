@@ -15,7 +15,7 @@ services:
     network_mode: bridge
     environment:
       - CONFIG_PATH=/config/config.yaml      # Optional. Default is ./config.yaml
-      - HTTP_PROXY=http://127.0.0.1:9090     # Optional. Default is empty
+      - HTTP_PROXY=http://127.0.0.1:9090     # Optional. Default is empty. Refer to https://golang.org/pkg/net/http/#ProxyFromEnvironment for more details
       - HTTPS_PROXY=http://127.0.0.1:9090    # Optional. Default is empty
       - NO_PROXY=example.com,192.168.0.0/16  # Optional. Default is empty
     restart: unless-stopped
@@ -48,5 +48,6 @@ tasks:
     feed_url: https://rsshub.app/rsshub/routes
     cron: '*/30 * * * *' # For more supported expressions, please refer to https://pkg.go.dev/github.com/robfig/cron
     notification_url: bark://:key@api.day.app # Shoutrrr URL for feed items. Please refer to https://containrrr.dev/shoutrrr/v0.8/
+    proxy: http://127.0.0.1:8081 # Optional. Default is from enviroment
 ```
 The config file is automatically reloaded when modified.
