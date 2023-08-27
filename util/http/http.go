@@ -20,6 +20,8 @@ type Client interface {
 	Post(url string, body []byte, headers map[string]string) ([]byte, error)
 }
 
+var timeout = 60 * time.Second
+
 // NewClient creates a new HTTP client with proxy settings from the environment
 func NewClient() Client {
 	return &clientImpl{
@@ -27,7 +29,7 @@ func NewClient() Client {
 			Transport: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
 			},
-			Timeout: 60 * time.Second,
+			Timeout: timeout,
 		},
 	}
 }
@@ -48,6 +50,7 @@ func NewClientWithProxy(proxy string) Client {
 			Transport: &http.Transport{
 				Proxy: proxyFunc,
 			},
+			Timeout: timeout,
 		},
 	}
 }
