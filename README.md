@@ -20,13 +20,21 @@ services:
       - NO_PROXY=example.com,192.168.0.0/16  # Optional. Default is empty
     restart: unless-stopped
 ```
-### Go Install
+### Go install
 ```shell
 go install github.com/keocheung/rss-bell@latest
 ```
 ### Build from source
 ```shell
+git clone https://github.com/keocheung/rss-bell
+cd rss-bell
 go build -o rss-bell .
+```
+### Build Docker image from source
+```shell
+git clone https://github.com/keocheung/rss-bell
+cd rss-bell
+docker build -t rss-bell:latest .
 ```
 
 ## Usage
