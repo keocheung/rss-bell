@@ -9,10 +9,10 @@ import (
 	"sync"
 	"syscall"
 
-	"rss-bell/meta"
+	"rss-bell/internal/meta"
 	"rss-bell/pkg/config"
 	"rss-bell/pkg/task"
-	"rss-bell/util/logger"
+	"rss-bell/pkg/util/logger"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/keocheung/shoutrrr"

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"rss-bell/pkg/config"
-	"rss-bell/util/http"
-	"rss-bell/util/logger"
+	"rss-bell/pkg/util/http"
+	"rss-bell/pkg/util/logger"
 
 	"github.com/keocheung/shoutrrr"
 	"github.com/keocheung/shoutrrr/pkg/types"

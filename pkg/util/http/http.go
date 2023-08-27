@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"rss-bell/util/logger"
+	"rss-bell/pkg/util/logger"
 )
 
 // Client is a custom interface for sending HTTP requests
