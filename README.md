@@ -49,5 +49,6 @@ tasks:
     cron: '*/30 * * * *' # For more supported expressions, please refer to https://pkg.go.dev/github.com/robfig/cron
     notification_url: bark://:key@api.day.app # Shoutrrr URL for feed items. Please refer to https://containrrr.dev/shoutrrr/v0.8/
     proxy: http://127.0.0.1:8081 # Optional. Default is from enviroment
+    max_delay_in_second: 10 # Optional. If greater than 0, a random delay would be added to every check
 ```
 The config file is automatically reloaded when modified.

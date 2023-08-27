@@ -11,6 +11,7 @@ import (
 
 	"rss-bell/internal/meta"
 	"rss-bell/pkg/config"
+	"rss-bell/pkg/schedule"
 	"rss-bell/pkg/task"
 	"rss-bell/pkg/util/logger"
 
@@ -93,11 +94,12 @@ func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[
 				return
 			}
 			tasks[tID] = t
-			entryID, err := c.AddJob(tConf.Cron, t)
+			schedule, err := schedule.NewRandomDelaySchedule(tConf.Cron, tConf.MaxDelayInSecond)
 			if err != nil {
 				logger.Errorf("addJob %s error: %v", tID, err)
 				return
 			}
+			entryID := c.Schedule(schedule, t)
 			entries[tID] = entryID
 			logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
 			wg.Done()

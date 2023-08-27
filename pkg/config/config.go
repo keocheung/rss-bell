@@ -7,9 +7,10 @@ type Config struct {
 }
 
 type Task struct {
-	Name            string `yaml:"name"`
-	FeedURL         string `yaml:"feed_url"`
-	Cron            string `yaml:"cron"`
-	Proxy           string `yaml:"proxy"`
-	NotificationURL string `yaml:"notification_url"`
+	Name             string `yaml:"name"`
+	FeedURL          string `yaml:"feed_url"`
+	Cron             string `yaml:"cron"`
+	Proxy            string `yaml:"proxy"`
+	NotificationURL  string `yaml:"notification_url"`
+	MaxDelayInSecond int32  `yaml:"max_delay_in_second"`
 }
