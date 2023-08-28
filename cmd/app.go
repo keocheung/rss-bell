@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -24,27 +23,20 @@ const (
 	defaultConfigPath = "./config.yaml"
 )
 
-func StartApp() {
+func StartApp() error {
 	c := cron.New()
 	c.Start()
 	conf, err := loadConfigFromFile()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	tasks, entries := registerTasks(conf, c)
 
 	// Watch config file for changes
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer watcher.Close()
-	configPath := getConfigPath()
-	err = watcher.Add(configPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	logger.Infof("watching config file: %s", configPath)
 	go func() {
 		for {
 			select {
@@ -69,6 +61,13 @@ func StartApp() {
 			}
 		}
 	}()
+	configPath := getConfigPath()
+	err = watcher.Add(configPath)
+	if err != nil {
+		return err
+	}
+	logger.Infof("watching config file: %s", configPath)
+	return nil
 }
 
 func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[string]cron.EntryID) {
@@ -105,41 +104,52 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 	// Remove tasks that doesn't exist anymore
 	for tID := range tasks {
 		if _, ok := conf.Tasks[tID]; !ok {
-			c.Remove(entries[tID])
-			delete(tasks, tID)
-			delete(entries, tID)
-			logger.Infof("task removed: %s", tID)
+			removeTask(tID, tasks, entries, c)
 		}
 	}
 
 	for tID, tConf := range conf.Tasks {
 		// Update task configs
 		if _, ok := tasks[tID]; ok {
-			// TODO: handle cron expression changes
-			tasks[tID].UpdateConfig(tConf)
-			logger.Infof("task updated, ID: %s", tID)
+			if tConf.Cron != tasks[tID].GetConfig().Cron {
+				removeTask(tID, tasks, entries, c)
+				addTask(tID, tConf, tasks, entries, c)
+			} else {
+				tasks[tID].UpdateConfig(tConf)
+				logger.Infof("task updated: %s", tID)
+			}
 			continue
 		}
 
-		// Add new tasks
-		logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
-		t, err := task.NewTask(tID, tConf)
-		if err != nil {
-			logger.Errorf("NewTask %s error: %v", tID, err)
-			continue
-		}
-		tasks[tID] = t
-		entryID, err := c.AddJob(tConf.Cron, t)
-		if err != nil {
-			logger.Errorf("AddJob %s error: %v", tID, err)
-			continue
-		}
-		entries[tID] = entryID
+		addTask(tID, tConf, tasks, entries, c)
 	}
 	logger.Infof("config reloaded")
 	sendAppNotification(conf.AppNotificationURL, "config reloaded")
 
 	return tasks, entries
+}
+
+func removeTask(tID string, tasks map[string]task.Task, entries map[string]cron.EntryID, c *cron.Cron) {
+	c.Remove(entries[tID])
+	delete(tasks, tID)
+	delete(entries, tID)
+	logger.Infof("task removed: %s", tID)
+}
+
+func addTask(tID string, tConf config.Task, tasks map[string]task.Task, entries map[string]cron.EntryID, c *cron.Cron) {
+	t, err := task.NewTask(tID, tConf)
+	if err != nil {
+		logger.Errorf("NewTask %s error: %v", tID, err)
+		return
+	}
+	tasks[tID] = t
+	entryID, err := c.AddJob(tConf.Cron, t)
+	if err != nil {
+		logger.Errorf("AddJob %s error: %v", tID, err)
+		return
+	}
+	entries[tID] = entryID
+	logger.Infof("task added: %s", tID)
 }
 
 func loadConfigFromFile() (config.Config, error) {

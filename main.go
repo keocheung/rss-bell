@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,7 +14,10 @@ import (
 func main() {
 	logger.Infof("rss-bell %s", meta.Version)
 
-	cmd.StartApp()
+	err := cmd.StartApp()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)

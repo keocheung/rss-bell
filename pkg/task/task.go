@@ -17,12 +17,13 @@ import (
 
 type Task interface {
 	cron.Job
+	GetConfig() config.Task
 	UpdateConfig(config config.Task)
 }
 
 type taskImpl struct {
 	id            string
-	config        config.Task
+	Config        config.Task
 	httpClient    http.Client
 	lastGUID      string
 	lastPublished time.Time
@@ -37,7 +38,7 @@ func NewTask(id string, config config.Task) (Task, error) {
 	}
 	t := &taskImpl{
 		id:         id,
-		config:     config,
+		Config:     config,
 		httpClient: client,
 	}
 	feed, err := t.getFeed()
@@ -63,12 +64,12 @@ func (t *taskImpl) Run() {
 		if t.itemIsOld(item) {
 			break
 		}
-		sender, err := shoutrrr.CreateSender(t.config.NotificationURL)
+		sender, err := shoutrrr.CreateSender(t.Config.NotificationURL)
 		if err != nil {
-			logger.Errorf("create sender for %s error: %v", t.config.NotificationURL, err)
+			logger.Errorf("create sender for %s error: %v", t.Config.NotificationURL, err)
 			continue
 		}
-		title := t.config.Name
+		title := t.Config.Name
 		if title == "" {
 			title = feed.Title
 		}
@@ -83,18 +84,22 @@ func (t *taskImpl) Run() {
 	t.lastPublished = *feed.Items[0].PublishedParsed
 }
 
+func (t *taskImpl) GetConfig() config.Task {
+	return t.Config
+}
+
 func (t *taskImpl) UpdateConfig(config config.Task) {
-	t.config = config
+	t.Config = config
 }
 
 func (t *taskImpl) getFeed() (*gofeed.Feed, error) {
-	data, err := t.httpClient.Get(t.config.FeedURL, nil)
+	data, err := t.httpClient.Get(t.Config.FeedURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("get %s error: %v", t.config.FeedURL, err)
+		return nil, fmt.Errorf("get %s error: %v", t.Config.FeedURL, err)
 	}
 	feed, err := gofeed.NewParser().ParseString(string(data))
 	if err != nil {
-		return nil, fmt.Errorf("parse %s error: %v", t.config.FeedURL, err)
+		return nil, fmt.Errorf("parse %s error: %v", t.Config.FeedURL, err)
 	}
 	// Disable sorting if any feed item does not have a publish time
 	canSort := true
