@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"rss-bell/pkg/config"
@@ -39,13 +40,9 @@ func NewTask(id string, config config.Task) (Task, error) {
 		config:     config,
 		httpClient: client,
 	}
-	data, err := t.httpClient.Get(t.config.FeedURL, nil)
+	feed, err := t.getFeed()
 	if err != nil {
-		return nil, fmt.Errorf("get %s error: %v", t.config.FeedURL, err)
-	}
-	feed, err := gofeed.NewParser().ParseString(string(data))
-	if err != nil {
-		return nil, fmt.Errorf("parse %s error: %v", t.config.FeedURL, err)
+		return nil, err
 	}
 	t.lastGUID = feed.Items[0].GUID
 	t.lastPublished = *feed.Items[0].PublishedParsed
@@ -54,15 +51,9 @@ func NewTask(id string, config config.Task) (Task, error) {
 
 func (t *taskImpl) Run() {
 	logger.Infof("checking %s", t.id)
-	data, err := t.httpClient.Get(t.config.FeedURL, nil)
+	feed, err := t.getFeed()
 	if err != nil {
-		logger.Errorf("get %s error: %v", t.config.FeedURL, err)
-		return
-	}
-	feed, err := gofeed.NewParser().ParseString(string(data))
-	if err != nil {
-		logger.Errorf("parse %s error: %v", t.config.FeedURL, err)
-		return
+		logger.Errorf(err.Error())
 	}
 	if len(feed.Items) == 0 {
 		logger.Infof("no feed items for %s", t.id)
@@ -94,6 +85,29 @@ func (t *taskImpl) Run() {
 
 func (t *taskImpl) UpdateConfig(config config.Task) {
 	t.config = config
+}
+
+func (t *taskImpl) getFeed() (*gofeed.Feed, error) {
+	data, err := t.httpClient.Get(t.config.FeedURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("get %s error: %v", t.config.FeedURL, err)
+	}
+	feed, err := gofeed.NewParser().ParseString(string(data))
+	if err != nil {
+		return nil, fmt.Errorf("parse %s error: %v", t.config.FeedURL, err)
+	}
+	// Disable sorting if any feed item does not have a publish time
+	canSort := true
+	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			canSort = false
+			break
+		}
+	}
+	if canSort {
+		sort.Sort(sort.Reverse(feed))
+	}
+	return feed, nil
 }
 
 func (t *taskImpl) itemIsOld(item *gofeed.Item) bool {
