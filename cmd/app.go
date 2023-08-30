@@ -30,7 +30,8 @@ func StartApp() error {
 	if err != nil {
 		return err
 	}
-	tasks, entries := registerTasks(conf, c)
+	tasks, entries, errIDs := registerTasks(conf, c)
+	sendAppNotification(conf.AppNotificationURL, fmt.Sprintf("Tasks added, errs: %+v", errIDs))
 
 	// Watch config file for changes
 	watcher, err := fsnotify.NewWatcher()
@@ -70,22 +71,25 @@ func StartApp() error {
 	return nil
 }
 
-func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[string]cron.EntryID) {
+func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[string]cron.EntryID, []string) {
 	tasks := make(map[string]task.Task)
 	entries := make(map[string]cron.EntryID)
 	wg := sync.WaitGroup{}
 	wg.Add(len(conf.Tasks))
+	var errIDs []string
 	for tID, tConf := range conf.Tasks {
 		go func(tID string, tConf config.Task) {
 			t, err := task.NewTask(tID, tConf)
 			if err != nil {
 				logger.Errorf("NewTask %s error: %v", tID, err)
+				errIDs = append(errIDs, tID)
 				return
 			}
 			tasks[tID] = t
 			schedule, err := schedule.NewRandomDelaySchedule(tConf.Cron, tConf.MaxDelayInSecond)
 			if err != nil {
 				logger.Errorf("addJob %s error: %v", tID, err)
+				errIDs = append(errIDs, tID)
 				return
 			}
 			entryID := c.Schedule(schedule, t)
@@ -95,7 +99,7 @@ func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[
 		}(tID, tConf)
 	}
 	wg.Wait()
-	return tasks, entries
+	return tasks, entries, errIDs
 }
 
 func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[string]cron.EntryID,
@@ -124,7 +128,7 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 		addTask(tID, tConf, tasks, entries, c)
 	}
 	logger.Infof("config reloaded")
-	sendAppNotification(conf.AppNotificationURL, "config reloaded")
+	sendAppNotification(conf.AppNotificationURL, "Config reloaded")
 
 	return tasks, entries
 }
