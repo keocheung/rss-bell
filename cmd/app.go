@@ -118,7 +118,7 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 			if tConf.Cron != tasks[tID].GetConfig().Cron {
 				removeTask(tID, tasks, entries, c)
 				addTask(tID, tConf, tasks, entries, c)
-			} else {
+			} else if tConf != tasks[tID].GetConfig() {
 				tasks[tID].UpdateConfig(tConf)
 				logger.Infof("task updated: %s", tID)
 			}
