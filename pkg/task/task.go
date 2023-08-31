@@ -65,10 +65,10 @@ func (t *taskImpl) Run() {
 		if t.itemIsOld(item) {
 			break
 		}
+		items = append(items, item)
 	}
 	for i := len(items) - 1; i >= 0; i-- {
 		item := items[i]
-		items = append(items, item)
 		sender, err := shoutrrr.CreateSender(t.Config.NotificationURL)
 		if err != nil {
 			logger.Errorf("create sender for %s error: %v", t.Config.NotificationURL, err)
