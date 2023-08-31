@@ -23,6 +23,7 @@ const (
 	defaultConfigPath = "./config.yaml"
 )
 
+// StartApp starts the main application
 func StartApp() error {
 	c := cron.New()
 	c.Start()

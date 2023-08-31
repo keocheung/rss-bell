@@ -12,14 +12,7 @@ type randomDelaySchedule struct {
 	schedule cron.Schedule
 }
 
-func (s *randomDelaySchedule) Next(from time.Time) time.Time {
-	if s.maxDelay <= 0 {
-		return s.schedule.Next(from)
-	}
-	delay := rand.Int31n(s.maxDelay)
-	return s.schedule.Next(from).Add(time.Duration(delay) * time.Second)
-}
-
+// NewRandomDelaySchedule creates a cron.Schedule with a random delay
 func NewRandomDelaySchedule(spec string, maxDelayInSecond int32) (cron.Schedule, error) {
 	schedule, err := cron.ParseStandard(spec)
 	if err != nil {
@@ -29,4 +22,12 @@ func NewRandomDelaySchedule(spec string, maxDelayInSecond int32) (cron.Schedule,
 		maxDelay: maxDelayInSecond,
 		schedule: schedule,
 	}, nil
+}
+
+func (s *randomDelaySchedule) Next(from time.Time) time.Time {
+	if s.maxDelay <= 0 {
+		return s.schedule.Next(from)
+	}
+	delay := rand.Int31n(s.maxDelay)
+	return s.schedule.Next(from).Add(time.Duration(delay) * time.Second)
 }

@@ -15,10 +15,13 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+// Task is a task that checks RSS feed and sends notifications if the feed has updates
 type Task interface {
-	cron.Job
+	// GetConfig returns the task config
 	GetConfig() config.Task
+	// UpdateConfig updates the task config
 	UpdateConfig(config config.Task)
+	cron.Job
 }
 
 type taskImpl struct {
@@ -29,6 +32,7 @@ type taskImpl struct {
 	lastPublished time.Time
 }
 
+// NewTask creates a new task with task ID and task config
 func NewTask(id string, config config.Task) (Task, error) {
 	var client http.Client
 	if config.Proxy != "" {
