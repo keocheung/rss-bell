@@ -60,10 +60,15 @@ func (t *taskImpl) Run() {
 		logger.Infof("no feed items for %s", t.id)
 		return
 	}
+	var items []*gofeed.Item
 	for _, item := range feed.Items {
 		if t.itemIsOld(item) {
 			break
 		}
+	}
+	for i := len(items) - 1; i >= 0; i-- {
+		item := items[i]
+		items = append(items, item)
 		sender, err := shoutrrr.CreateSender(t.Config.NotificationURL)
 		if err != nil {
 			logger.Errorf("create sender for %s error: %v", t.Config.NotificationURL, err)
