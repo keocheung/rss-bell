@@ -116,7 +116,7 @@ func updateTasks(conf config.Config, tasks map[string]task.Task, entries map[str
 	for tID, tConf := range conf.Tasks {
 		// Update task configs
 		if _, ok := tasks[tID]; ok {
-			if tConf.Cron != tasks[tID].GetConfig().Cron {
+			if tConf.Cron != tasks[tID].GetConfig().Cron || tConf.MaxDelayInSecond != tasks[tID].GetConfig().MaxDelayInSecond {
 				removeTask(tID, tasks, entries, c)
 				addTask(tID, tConf, tasks, entries, c)
 			} else if tConf != tasks[tID].GetConfig() {
