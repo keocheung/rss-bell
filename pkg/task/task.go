@@ -59,9 +59,10 @@ func (t *taskImpl) Run() {
 	feed, err := t.getFeed()
 	if err != nil {
 		logger.Errorf(err.Error())
+		return
 	}
-	if len(feed.Items) == 0 {
-		logger.Infof("no feed items for %s", t.id)
+	if feed == nil || len(feed.Items) == 0 {
+		logger.Infof("no feed item for %s", t.id)
 		return
 	}
 	var items []*gofeed.Item
