@@ -1,11 +1,13 @@
 package task
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
 
 	"rss-bell/pkg/config"
+	"rss-bell/pkg/dlwebhook"
 	"rss-bell/pkg/util/http"
 	"rss-bell/pkg/util/logger"
 
@@ -47,6 +49,7 @@ func NewTask(id string, config config.Task) (Task, error) {
 	}
 	feed, err := t.getFeed()
 	if err != nil {
+		// TODO handle error
 		return nil, err
 	}
 	t.lastGUID = feed.Items[0].GUID
@@ -74,21 +77,12 @@ func (t *taskImpl) Run() {
 	}
 	for i := len(items) - 1; i >= 0; i-- {
 		item := items[i]
-		sender, err := shoutrrr.CreateSender(t.Config.NotificationURL)
-		if err != nil {
-			logger.Errorf("create sender for %s error: %v", t.Config.NotificationURL, err)
-			continue
+		if t.Config.NotificationURL != "" {
+			t.sendNotification(feed, item)
 		}
-		title := t.Config.Name
-		if title == "" {
-			title = feed.Title
+		if t.Config.DownloadWebhook.APIURL != "" {
+			t.triggerDownloadWebhook(item)
 		}
-		params := types.Params(map[string]string{
-			"title": title,
-			"url":   item.Link,
-		})
-		errs := sender.Send(item.Title, &params)
-		logger.Infof("sent notification for %s, errs: %+v", t.id, errs)
 	}
 	t.lastGUID = feed.Items[0].GUID
 	t.lastPublished = *feed.Items[0].PublishedParsed
@@ -130,4 +124,47 @@ func (t *taskImpl) itemIsOld(item *gofeed.Item) bool {
 		return item.PublishedParsed.Add(-1).Before(t.lastPublished)
 	}
 	return item.GUID == t.lastGUID
+}
+
+func (t *taskImpl) sendNotification(feed *gofeed.Feed, item *gofeed.Item) {
+	sender, err := shoutrrr.CreateSender(t.Config.NotificationURL)
+	if err != nil {
+		logger.Errorf("create sender for %s error: %v", t.Config.NotificationURL, err)
+		return
+	}
+	title := t.Config.Name
+	if title == "" {
+		title = feed.Title
+	}
+	params := types.Params(map[string]string{
+		"title": title,
+		"url":   item.Link,
+	})
+	errs := sender.Send(item.Title, &params)
+	logger.Infof("sent notification for %s, errs: %+v", t.id, errs)
+}
+
+func (t *taskImpl) triggerDownloadWebhook(item *gofeed.Item) {
+	client := http.NewClient()
+	data := dlwebhook.Data{
+		URL:          item.Link,
+		Secret:       t.Config.DownloadWebhook.Secret,
+		Engine:       t.Config.DownloadWebhook.Engine,
+		Path:         t.Config.DownloadWebhook.Path,
+		Name:         t.Config.DownloadWebhook.Name,
+		ExtraOptions: t.Config.DownloadWebhook.ExtraOptions,
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		logger.Errorf("triggerDownloadWebhook marshal error: %v", err)
+		return
+	}
+	rsp, err := client.Post(t.Config.DownloadWebhook.APIURL, b, map[string]string{
+		"Content-Type": "application/json",
+	})
+	if err != nil {
+		logger.Errorf("triggerDownloadWebhook post error: %v", err)
+		return
+	}
+	logger.Infof("triggered download webhook for %s, rsp: %s", t.id, rsp)
 }
