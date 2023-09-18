@@ -52,6 +52,9 @@ func NewTask(id string, config config.Task) (Task, error) {
 		// TODO handle error
 		return nil, err
 	}
+	if feed == nil || len(feed.Items) == 0 {
+		return nil, fmt.Errorf("empty feed: %s", t.id)
+	}
 	t.lastGUID = feed.Items[0].GUID
 	t.lastPublished = *feed.Items[0].PublishedParsed
 	return t, nil

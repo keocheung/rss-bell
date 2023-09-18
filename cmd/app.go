@@ -80,6 +80,7 @@ func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[
 	var errIDs []string
 	for tID, tConf := range conf.Tasks {
 		go func(tID string, tConf config.Task) {
+			defer wg.Done()
 			t, err := task.NewTask(tID, tConf)
 			if err != nil {
 				logger.Errorf("NewTask %s error: %v", tID, err)
@@ -96,7 +97,6 @@ func registerTasks(conf config.Config, c *cron.Cron) (map[string]task.Task, map[
 			entryID := c.Schedule(schedule, t)
 			entries[tID] = entryID
 			logger.Infof("task added, ID: %s, Name: %s", tID, tConf.Name)
-			wg.Done()
 		}(tID, tConf)
 	}
 	wg.Wait()
