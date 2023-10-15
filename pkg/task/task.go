@@ -30,7 +30,6 @@ type taskImpl struct {
 	id            string
 	Config        config.Task
 	httpClient    http.Client
-	lastGUID      string
 	lastPublished time.Time
 }
 
@@ -47,16 +46,7 @@ func NewTask(id string, config config.Task) (Task, error) {
 		Config:     config,
 		httpClient: client,
 	}
-	feed, err := t.getFeed()
-	if err != nil {
-		// TODO handle error
-		return nil, err
-	}
-	if feed == nil || len(feed.Items) == 0 {
-		return nil, fmt.Errorf("empty feed: %s", t.id)
-	}
-	t.lastGUID = feed.Items[0].GUID
-	t.lastPublished = *feed.Items[0].PublishedParsed
+	t.lastPublished = time.Now()
 	return t, nil
 }
 
@@ -73,10 +63,16 @@ func (t *taskImpl) Run() {
 	}
 	var items []*gofeed.Item
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			continue
+		}
 		if t.itemIsOld(item) {
 			break
 		}
 		items = append(items, item)
+	}
+	if len(items) == 0 {
+		return
 	}
 	for i := len(items) - 1; i >= 0; i-- {
 		item := items[i]
@@ -87,7 +83,6 @@ func (t *taskImpl) Run() {
 			t.triggerDownloadWebhook(item)
 		}
 	}
-	t.lastGUID = feed.Items[0].GUID
 	t.lastPublished = *feed.Items[0].PublishedParsed
 }
 
@@ -123,10 +118,7 @@ func (t *taskImpl) getFeed() (*gofeed.Feed, error) {
 }
 
 func (t *taskImpl) itemIsOld(item *gofeed.Item) bool {
-	if item.PublishedParsed != nil {
-		return item.PublishedParsed.Add(-1).Before(t.lastPublished)
-	}
-	return item.GUID == t.lastGUID
+	return item.PublishedParsed.Add(-1).Before(t.lastPublished)
 }
 
 func (t *taskImpl) sendNotification(feed *gofeed.Feed, item *gofeed.Item) {
