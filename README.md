@@ -10,7 +10,6 @@ services:
     image: keocheung/rss-bell                # Or ghcr.io/keocheung/rss-bell
     container_name: rss-bell
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ./config.yaml:/config/config.yaml    # YAML config file location
     network_mode: bridge
     environment:
