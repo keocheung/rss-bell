@@ -46,7 +46,7 @@ func NewTask(id string, config config.Task) (Task, error) {
 		Config:     config,
 		httpClient: client,
 	}
-	t.lastPublished = time.Now()
+	t.initLastPublished()
 	return t, nil
 }
 
@@ -115,6 +115,20 @@ func (t *taskImpl) getFeed() (*gofeed.Feed, error) {
 		sort.Sort(sort.Reverse(feed))
 	}
 	return feed, nil
+}
+
+func (t *taskImpl) initLastPublished() {
+	feed, err := t.getFeed()
+	if err != nil {
+		logger.Errorf(err.Error())
+		t.lastPublished = time.Now()
+		return
+	}
+	if feed == nil || len(feed.Items) == 0 || feed.Items[0].PublishedParsed == nil {
+		t.lastPublished = time.Now()
+		return
+	}
+	t.lastPublished = *feed.Items[0].PublishedParsed
 }
 
 func (t *taskImpl) itemIsOld(item *gofeed.Item) bool {
