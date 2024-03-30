@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	logger.Infof("rss-bell %s", meta.Version)
+	logger.Infof("%s %s", meta.AppName, meta.Version)
 
 	err := cmd.StartApp()
 	if err != nil {

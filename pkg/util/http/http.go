@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	"rss-bell/internal/meta"
 	"rss-bell/pkg/util/logger"
 )
 
@@ -80,6 +81,7 @@ func (c *clientImpl) request(url string, method string, body []byte, headers map
 	if err != nil {
 		return nil, fmt.Errorf("%s %s error: %v", method, url, err)
 	}
+	req.Header.Set("User-Agent", meta.UserAgent)
 	for key, header := range headers {
 		req.Header.Set(key, header)
 	}
